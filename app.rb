@@ -30,6 +30,7 @@ stated_at = Time.zone.now
 def exit?
   sleep_time = [{start: "23:50", stop: "24:00"},
                 {start: "00:00", stop: "06:30"}]
+  Time.zone = "Asia/Tokyo"
   now = Time.zone.now
   sleep_time.each do |sl|
     t1 = Time.zone.parse(sl[:start])
