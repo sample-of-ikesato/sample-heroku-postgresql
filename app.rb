@@ -7,6 +7,7 @@ require 'sinatra/multi_route'
 require 'eventmachine'
 require 'pp'
 require 'pg'
+require 'open-uri'
 require 'uri'
 require 'json'
 
