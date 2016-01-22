@@ -8,6 +8,7 @@ require 'eventmachine'
 require 'pp'
 require 'pg'
 require 'uri'
+require 'json'
 
 Time.zone = "Asia/Tokyo"
 
@@ -23,16 +24,28 @@ rescue PG::UndefinedTable => e
 end
 
 counter = res[0]["counter"].to_i
-last_updated = Time.zone.parse(res[0]["updated_at"] + " UTC")
+updated_at = Time.zone.parse(res[0]["updated_at"] + " UTC")
+stated_at = Time.zone.now
 
-SLEEP_TIME = [
- {start: "00:00", end: "06:30"},
-]
+def exit?
+  sleep_time = [{start: "23:50", stop: "24:00"},
+                {start: "00:00", stop: "06:30"}]
+  now = Time.zone.now
+  sleep_time.each do |sl|
+    t1 = Time.zone.parse(sl[:start])
+    t2 = Time.zone.parse(sl[:stop])
+    if t1 <= now && now < t2
+      return true
+    end
+  end
+  false
+end
 
 EM::defer do
   loop do
-    # sync weather and notify messages
-    sleep 10.minutes
+    next if exit?
+
+    sleep 3.minutes
     counter += 1
     con.exec("UPDATE counters SET counter=#{counter}, updated_at=now()")
 
@@ -46,7 +59,6 @@ get '/heartbeat' do
 end
 
 get '/force-sync' do
-  #weather.sync
   "OK"
 end
 
@@ -69,6 +81,6 @@ end
 
 
 # For debug
-get '/debug/counter' do
-  counter.to_s
+get '/debug' do
+  {counter: counter, updated_at: updated_at, stated_at: stated_at}.to_json.to_s
 end

@@ -58,6 +58,7 @@ DEPENDENCIES
   activesupport
   byebug
   eventmachine
+  json
   pg
   rspec
   sinatra

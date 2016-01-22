@@ -4,6 +4,7 @@ gem 'sinatra-contrib'
 gem 'eventmachine'
 gem 'activesupport'
 gem 'pg'
+gem 'json'
 
 # for rspec
 gem 'rspec'
