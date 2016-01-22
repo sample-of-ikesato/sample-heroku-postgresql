@@ -9,17 +9,21 @@ require 'pp'
 require 'pg'
 require 'uri'
 
+Time.zone = "Asia/Tokyo"
 
 uri = URI.parse(ENV['DATABASE_URL'])
 con = PG::connect(host: uri.host, user: uri.user, password: uri.password, port: uri.port, dbname: uri.path[1..-1])
-res = con.exec("SELECT couter FROM counter")
-p res.ntuples
-p res[0]
 
+res = begin
+  con.exec("SELECT counter, updated_at FROM counters")
+rescue PG::UndefinedTable => e
+  con.exec("CREATE TABLE counters (counter INT NOT NULl, updated_at timestamp default NULL)")
+  con.exec("INSERT INTO counters (counter, updated_at) values (0, now())")
+  con.exec("SELECT counter, updated_at FROM counters")
+end
 
-
-counter = 1
-Time.zone = "Asia/Tokyo"
+counter = res[0]["counter"].to_i
+last_updated = Time.zone.parse(res[0]["updated_at"] + " UTC")
 
 SLEEP_TIME = [
  {start: "00:00", end: "06:30"},
@@ -30,9 +34,10 @@ EM::defer do
     # sync weather and notify messages
     sleep 10.minutes
     counter += 1
+    con.exec("UPDATE counters SET counter=#{counter}, updated_at=now()")
 
     # polling self to prevent sleep
-    open("https://sinatra-demo-20141027.herokuapp.com/heartbeat")
+    open("https://db-test10.herokuapp.com/heartbeat")
   end
 end
 
